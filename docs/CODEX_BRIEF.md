@@ -62,6 +62,8 @@ Use `.env` (already scaffolded):
 
 Do **not** expose Google API keys to clients. All calls go through the BFF.
 
+> **Current quarter note:** AI inference will be proxied through a desktop-hosted GPT-OSS instance. Expose it on the internal network and configure the app (`LLM_PROVIDER`, base URL, credentials) so the backend talks to that service instead of cloud-hosted APIs.
+
 ## 5) Data Contracts (simplified)
 
 Refer to full JSON Schemas in:
@@ -230,13 +232,13 @@ Top-level:
 
 ```
 openapi.yaml
-infra/docker-compose.yml
+docker-compose.yml
 .env.example
 ```
 
 ## 9) Acceptance Criteria
 
-- `docker compose -f infra/docker-compose.yml up --build` brings up `api`, `redis`, `db`.
+- `docker compose up --build` brings up `api`, `redis`, `db`.
 - `GET /healthz` → `{"ok": true}` (200).
 - `POST /routes/compute` returns a valid object matching OpenAPI.
 - `POST /places/along-route` returns valid minimal POIs.
