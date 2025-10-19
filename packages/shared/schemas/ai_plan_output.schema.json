@@ -2,7 +2,16 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "AIPlanOutput",
   "type": "object",
-  "description": "Placeholder schema for AI-generated itinerary output.",
-  "properties": {},
-  "additionalProperties": true
+  "additionalProperties": false,
+  "required": ["plan"],
+  "properties": {
+    "plan": {
+      "$ref": "./plan.schema.json"
+    },
+    "meta": {
+      "type": "object",
+      "description": "Optional metadata describing the generation context.",
+      "additionalProperties": true
+    }
+  }
 }

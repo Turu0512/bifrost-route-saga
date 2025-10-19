@@ -2,7 +2,106 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Plan",
   "type": "object",
-  "description": "Placeholder schema for travel plans. Update with real contract.",
-  "properties": {},
-  "additionalProperties": true
+  "additionalProperties": false,
+  "required": ["origin", "destination", "days"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "origin": {
+      "type": "string",
+      "minLength": 1
+    },
+    "destination": {
+      "type": "string",
+      "minLength": 1
+    },
+    "route_label": {
+      "type": "string"
+    },
+    "days": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PlanDay"
+      }
+    }
+  },
+  "$defs": {
+    "PlanDay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["date", "segments"],
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlanSegment"
+          }
+        }
+      }
+    },
+    "PlanSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start_time", "end_time", "title"],
+      "properties": {
+        "start_time": {
+          "type": "string"
+        },
+        "end_time": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "poi": {
+          "$ref": "#/$defs/PlaceItem"
+        },
+        "travel_mode": {
+          "type": "string",
+          "enum": ["drive", "walk", "stop"]
+        }
+      }
+    },
+    "PlaceItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "lat", "lng"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        },
+        "rating": {
+          "type": "number"
+        },
+        "open_now": {
+          "type": "boolean"
+        },
+        "summary": {
+          "type": "string"
+        }
+      }
+    }
+  }
 }

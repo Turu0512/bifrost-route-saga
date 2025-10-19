@@ -2,5 +2,327 @@ openapi: 3.0.3
 info:
   title: Bifrost Route Saga API
   version: 0.1.0
-paths: {}
-components: {}
+  description: >
+    Backend-for-frontend API powering the scenic drive planner. All routes require HTTPS.
+servers:
+  - url: http://localhost:8000
+paths:
+  /healthz:
+    get:
+      tags: [monitoring]
+      summary: Readiness probe
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /routes/compute:
+    post:
+      tags: [routes]
+      summary: Compute primary route and alternatives
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoutesComputeRequest'
+      responses:
+        '200':
+          description: A computed route with alternatives
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutesComputeResponse'
+  /places/along-route:
+    post:
+      tags: [places]
+      summary: Search places along a given polyline corridor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlacesAlongRouteRequest'
+      responses:
+        '200':
+          description: Places found along the route corridor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlacesAlongRouteResponse'
+  /ai/plan:
+    post:
+      tags: [ai]
+      summary: Generate an itinerary using AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AIPlanRequest'
+      responses:
+        '200':
+          description: AI generated plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIPlanResponse'
+  /plans:
+    post:
+      tags: [plans]
+      summary: Create a travel plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanCreateRequest'
+      responses:
+        '201':
+          description: Newly created plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plan'
+  /plans/{plan_id}:
+    get:
+      tags: [plans]
+      summary: Fetch a stored travel plan
+      parameters:
+        - in: path
+          name: plan_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Plan found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plan'
+        '404':
+          description: Plan not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+    ErrorResponse:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          type: string
+    RoutesComputeRequest:
+      type: object
+      required: [origin, destination]
+      properties:
+        origin:
+          type: string
+        destination:
+          type: string
+        waypoints:
+          type: array
+          items:
+            type: string
+          default: []
+        avoidTolls:
+          type: boolean
+        trafficAware:
+          type: boolean
+        preferScenic:
+          type: boolean
+    RouteAlternative:
+      type: object
+      required:
+        [label, duration_s, distance_m, scenic_score, toll]
+      properties:
+        label:
+          type: string
+        duration_s:
+          type: integer
+          minimum: 0
+        distance_m:
+          type: integer
+          minimum: 0
+        scenic_score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        toll:
+          type: boolean
+    RoutesComputeResponse:
+      type: object
+      required: [polyline, distance_m, duration_s, alternatives]
+      properties:
+        polyline:
+          type: string
+          description: Encoded polyline
+        distance_m:
+          type: integer
+          minimum: 0
+        duration_s:
+          type: integer
+          minimum: 0
+        alternatives:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteAlternative'
+    PlacesAlongRouteRequest:
+      type: object
+      required: [polyline, categories]
+      properties:
+        polyline:
+          type: string
+        categories:
+          type: array
+          items:
+            type: string
+        corridor_width_m:
+          type: integer
+          minimum: 0
+        open_now:
+          type: boolean
+    PlaceItem:
+      type: object
+      required: [id, name, lat, lng]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        rating:
+          type: number
+        open_now:
+          type: boolean
+        summary:
+          type: string
+    PlacesAlongRouteResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlaceItem'
+    AIPlanPreferences:
+      type: object
+      properties:
+        theme:
+          type: string
+        max_distance_km:
+          type: integer
+          minimum: 0
+        time_budget_min:
+          type: integer
+          minimum: 0
+        avoid_tolls:
+          type: boolean
+    AIPlanCandidates:
+      type: object
+      properties:
+        routes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteAlternative'
+        pois:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlaceItem'
+    AIPlanRequest:
+      type: object
+      required: [origin, destination]
+      properties:
+        origin:
+          type: string
+        destination:
+          type: string
+        date:
+          type: string
+          format: date
+        preferences:
+          $ref: '#/components/schemas/AIPlanPreferences'
+        candidates:
+          $ref: '#/components/schemas/AIPlanCandidates'
+    PlanSegment:
+      type: object
+      required: [start_time, end_time, title]
+      properties:
+        start_time:
+          type: string
+        end_time:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        poi:
+          $ref: '#/components/schemas/PlaceItem'
+        travel_mode:
+          type: string
+          enum: [drive, walk, stop]
+    PlanDay:
+      type: object
+      required: [date, segments]
+      properties:
+        date:
+          type: string
+          format: date
+        summary:
+          type: string
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanSegment'
+    Plan:
+      type: object
+      required: [origin, destination, days]
+      properties:
+        id:
+          type: string
+          format: uuid
+        origin:
+          type: string
+        destination:
+          type: string
+        route_label:
+          type: string
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanDay'
+    PlanCreateRequest:
+      type: object
+      required: [origin, destination]
+      properties:
+        origin:
+          type: string
+        destination:
+          type: string
+        route_label:
+          type: string
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanDay'
+    AIPlanResponse:
+      type: object
+      required: [plan]
+      properties:
+        plan:
+          $ref: '#/components/schemas/Plan'
