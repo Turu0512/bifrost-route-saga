@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     llm_provider: Literal["openai", "google", "gpt-oss"] | None = Field(
         default=None, alias="LLM_PROVIDER"
     )
+    gpt_oss_base_url: str | None = Field(default=None, alias="GPT_OSS_BASE_URL")
+    gpt_oss_api_key: str | None = Field(default=None, alias="GPT_OSS_API_KEY")
     redis_url: str = Field("redis://redis:6379/0", alias="REDIS_URL")
     database_url: str = Field(
         "postgresql+asyncpg://bifrost:bifrost@db:5432/bifrost", alias="DATABASE_URL"
