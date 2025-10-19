@@ -8,6 +8,7 @@ from app.adapters.llm import LLMAdapter
 from app.adapters.places import PlacesAdapter
 from app.adapters.routes import RoutesAdapter
 from app.config import Settings, get_settings
+from app.repositories.plans import PlanRepository
 
 
 def get_app_settings() -> Settings:
@@ -47,3 +48,11 @@ def get_llm_adapter(request: Request) -> LLMAdapter:
     if adapter is None:
         raise RuntimeError("LLM adapter is not configured")
     return adapter
+
+
+def get_plan_repository(request: Request) -> PlanRepository:
+    """Provide the plan repository instance."""
+    repo = getattr(request.app.state, "plan_repository", None)
+    if repo is None:
+        raise RuntimeError("Plan repository is not configured")
+    return repo
