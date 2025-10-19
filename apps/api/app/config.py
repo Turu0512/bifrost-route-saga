@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     database_url: str = Field(
         "postgresql+asyncpg://bifrost:bifrost@db:5432/bifrost", alias="DATABASE_URL"
     )
+    testing: bool = Field(False, alias="TESTING")
 
     model_config = {
         "env_file": ".env",
