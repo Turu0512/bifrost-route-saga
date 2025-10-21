@@ -1,20 +1,16 @@
 from __future__ import annotations
 
+from typing import Any
+
 import httpx
+from pydantic import ValidationError
 
 from app.adapters.llm.base import LLMAdapter
-from app.schemas import (
-    AIPlanRequest,
-    AIPlanResponse,
-    Plan,
-    PlanDay,
-    PlanSegment,
-    PlaceItem,
-)
+from app.schemas import AIPlanRequest, AIPlanResponse, Plan, PlanDay, PlanSegment, PlaceItem
 
 
 class GPTOssAdapter(LLMAdapter):
-    """Adapter talking to a self-hosted GPT-OSS endpoint (stubbed)."""
+    """Adapter talking to a self-hosted GPT-OSS endpoint."""
 
     def __init__(
         self,
@@ -28,12 +24,25 @@ class GPTOssAdapter(LLMAdapter):
         self._client = client
 
     async def generate_plan(self, payload: AIPlanRequest) -> AIPlanResponse:
-        """Call GPT-OSS backend to produce a plan (currently stubbed)."""
+        """Call GPT-OSS backend to produce a plan."""
         if not self._base_url:
             return self._fallback(payload)
 
-        # TODO: Issue a POST request to GPT-OSS with strict JSON schema prompt.
-        return self._fallback(payload)
+        url = f"{self._base_url}/v1/plan"
+        headers = {"Content-Type": "application/json"}
+        if self._api_key:
+            headers["Authorization"] = f"Bearer {self._api_key}"
+
+        request_body: dict[str, Any] = payload.model_dump(mode="json")
+
+        try:
+            response = await self._client.post(url, json=request_body, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            return AIPlanResponse.model_validate(data)
+        except (httpx.HTTPError, ValidationError, ValueError):
+            # TODO: surface an explicit error response once GPT-OSS integration is production ready.
+            return self._fallback(payload)
 
     def _fallback(self, payload: AIPlanRequest) -> AIPlanResponse:
         scenic_stop = PlaceItem(
