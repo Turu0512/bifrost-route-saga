@@ -1,7 +1,8 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -16,14 +17,11 @@ class Settings(BaseSettings):
     gpt_oss_api_key: str | None = Field(default=None, alias="GPT_OSS_API_KEY")
     redis_url: str = Field("redis://redis:6379/0", alias="REDIS_URL")
     database_url: str = Field(
-        "postgresql+asyncpg://bifrost:bifrost@db:5432/bifrost", alias="DATABASE_URL"
+        "postgresql://bifrost:bifrost@db:5432/bifrost", alias="DATABASE_URL"
     )
     testing: bool = Field(False, alias="TESTING")
 
-    model_config = {
-        "env_file": ".env",
-        "extra": "ignore",
-    }
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 @lru_cache

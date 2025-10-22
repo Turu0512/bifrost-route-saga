@@ -7,7 +7,7 @@ services:
     env_file:
       - ./.env
     environment:
-      DATABASE_URL: postgresql+asyncpg://bifrost:bifrost@db:5432/bifrost
+      DATABASE_URL: postgresql://bifrost:bifrost@db:5432/bifrost
       REDIS_URL: redis://redis:6379/0
     ports:
       - "8000:8000"
